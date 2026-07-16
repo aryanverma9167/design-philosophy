@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cars24 Design Philosophy Survey</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Inter+Tight:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────────
+       DESIGN TOKENS
+    ───────────────────────────────────────────── */
+    :root {
+      --bg:          #0a0a0b;
+      --surface:     #111113;
+      --surface-2:   #18181b;
+      --border:      rgba(255,255,255,0.08);
+      --border-hover:rgba(255,255,255,0.18);
+      --text:        #f0efe8;
+      --text-2:      #888880;
+      --text-3:      #555550;
+      --accent:      #e8e0d0;
+      --accent-dim:  rgba(232,224,208,0.12);
+      --accent-glow: rgba(232,224,208,0.04);
+      --red:         #ff4545;
+      --radius:      16px;
+      --radius-sm:   10px;
+      --transition:  all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+      --fade:        all 0.22s ease;
+    }
+    [data-theme="light"] {
+      --bg:          #f5f4f0;
+      --surface:     #ffffff;
+      --surface-2:   #f0efeb;
+      --border:      rgba(0,0,0,0.08);
+      --border-hover:rgba(0,0,0,0.18);
+      --text:        #111110;
+      --text-2:      #666660;
+      --text-3:      #aaa8a0;
+      --accent:      #1a1a18;
+      --accent-dim:  rgba(26,26,24,0.08);
+      --accent-glow: rgba(26,26,24,0.03);
+    }
+
+    /* ─────────────────────────────────────────────
+       RESET & BASE
+    ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    input, textarea, button { font-family: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* ─────────────────────────────────────────────
+       PROGRESS BAR
+    ───────────────────────────────────────────── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 100;
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    /* ─────────────────────────────────────────────
+       TOPBAR
+    ───────────────────────────────────────────── */
+    #topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      z-index: 50;
+      pointer-events: none;
+    }
+    #topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: all;
+    }
+    #topbar-brand.visible { opacity: 1; }
+    #topbar-logo {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #topbar-logo span {
+      color: var(--bg);
+      font-family: 'Inter Tight', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: -0.03em;
+    }
+    #topbar-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      letter-spacing: 0.01em;
+    }
+    #topbar-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      pointer-events: all;
+    }
+    #step-counter {
+      font-size: 12px;
+      color: var(--text-3);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    #step-counter.visible { opacity: 1; }
+    #theme-toggle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-2);
+      font-size: 14px;
+      transition: var(--fade);
+    }
+    #theme-toggle:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    /* ─────────────────────────────────────────────
+       SCREEN SYSTEM
+    ───────────────────────────────────────────── */
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 80px;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: translateY(28px) scale(0.98);
+      transition: opacity 0.4s ease, transform 0.48s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0.4s;
+      z-index: 1;
+    }
+    .screen.active {
+      opacity: 1;
+      pointer-events: all;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      z-index: 2;
+      transition: opacity 0.4s ease, transform 0.48s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s linear 0s;
+    }
+    .screen.exit {
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+      transform: translateY(-24px) scale(0.98);
+      transition: opacity 0.28s ease, transform 0.28s ease, visibility 0s linear 0.28s;
+      z-index: 1;
+    }
+    .screen-inner {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ─────────────────────────────────────────────
+       QUESTION LABEL
+    ───────────────────────────────────────────── */
+    .q-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .q-label::before {
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 1px;
+      background: var(--text-3);
+    }
+
+    /* ──────────���──────────────────────────────────
+       TYPOGRAPHY
+    ───────────────────────────────────────────── */
+    .q-title {
+      font-family: 'Inter Tight', sans-serif;
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 600;
+      line-height: 1.12;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .q-subtitle {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-2);
+      font-weight: 400;
+      margin-bottom: 36px;
+    }
+
+    /* ─────────────────────────────────────────────
+       TEXT INPUT
+    ───────────────────────────────────────────── */
+    .input-wrap {
+      position: relative;
+    }
+    .text-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px 0;
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.25s ease;
+      letter-spacing: -0.01em;
+    }
+    .text-input::placeholder { color: var(--text-3); }
+    .text-input:focus { border-bottom-color: var(--accent); }
+    .text-input.error { border-bottom-color: var(--red); }
+
+    /* ─────────────────────────────────────────────
+       TEXTAREA
+    ───────────────────────────────────────────── */
+    .large-textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      font-size: 18px;
+      line-height: 1.6;
+      font-weight: 400;
+      color: var(--text);
+      outline: none;
+      resize: none;
+      min-height: 160px;
+      transition: border-color 0.25s ease, background 0.25s ease;
+      letter-spacing: -0.01em;
+    }
+    .large-textarea::placeholder { color: var(--text-3); }
+    .large-textarea:focus {
+      border-color: var(--border-hover);
+      background: var(--surface-2);
+    }
+    .large-textarea.error { border-color: var(--red); }
+
+    /* ─────────────────────────────────────────────
+       OPTION CHIPS (Q2 – team selection)
+    ───────────────────────────────────────────── */
+    .options-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .option-chip {
+      padding: 12px 20px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface);
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: -0.01em;
+      user-select: none;
+    }
+    .option-chip:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .option-chip.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+    .option-chip.error { border-color: var(--red); }
+
+    /* ─────────────────────────────────────────────
+       TRAIT PILLS (Q3 – 3-word picker)
+    ───────────────────────────────────────────── */
+    .traits-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .trait-pill {
+      padding: 11px 18px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--surface);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+    .trait-pill:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+    .trait-pill.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+    .trait-pill.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .trait-pill.disabled:hover {
+      border-color: var(--border);
+      color: var(--text-2);
+    }
+    .trait-counter {
+      font-size: 13px;
+      color: var(--text-3);
+      font-weight: 500;
+      margin-bottom: 6px;
+      transition: color 0.2s ease;
+    }
+    .trait-counter.maxed { color: var(--accent); }
+    .trait-counter.error-state { color: var(--red); }
+
+    /* ─────────────────────────────────────────────
+       SLIDER (Q4–Q8)
+    ───────────────────────────────────────────── */
+    .slider-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .slider-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-2);
+      flex: 1;
+      letter-spacing: -0.01em;
+    }
+    .slider-label.right { text-align: right; }
+    .slider-track {
+      flex: 3;
+      position: relative;
+      height: 4px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+    }
+    .slider-rail {
+      position: absolute;
+      inset: 0;
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: 100px;
+      pointer-events: none;
+    }
+    .slider-fill {
+      position: absolute;
+      left: 0; top: 0;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 100px;
+      pointer-events: none;
+      transition: width 0.06s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1.5px var(--accent), 0 4px 16px rgba(0,0,0,0.4);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1.5px var(--accent), 0 4px 16px rgba(0,0,0,0.4);
+    }
+    input[type="range"]:hover::-webkit-slider-thumb,
+    input[type="range"]:focus::-webkit-slider-thumb {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px var(--accent-dim), 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .slider-value-badge {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      margin-top: 4px;
+    }
+
+    /* ─────────────────────────────────────────────
+       CTA BUTTON
+    ───────────────────────────────────────────── */
+    .btn-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 36px;
+    }
+    .btn-primary {
+      padding: 14px 28px;
+      border-radius: 100px;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 32px rgba(232,224,208,0.15);
+    }
+    .btn-primary:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-arrow {
+      width: 18px;
+      height: 18px;
+      stroke: var(--bg);
+      transition: transform 0.2s ease;
+    }
+    .btn-primary:hover .btn-arrow { transform: translateX(3px); }
+
+    .btn-back {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-2);
+      transition: var(--fade);
+    }
+    .btn-back:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      transform: translateX(-2px);
+    }
+
+    .enter-hint {
+      font-size: 12px;
+      color: var(--text-3);
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text-3);
+    }
+
+    /* ─────────────────────────────────────────────
+       ERROR MESSAGE
+    ───────────────────────────────────────────── */
+    .error-msg {
+      font-size: 13px;
+      color: var(--red);
+      margin-top: 10px;
+      font-weight: 500;
+      min-height: 18px;
+      transition: opacity 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ─────────────────────────────────────────────
+       WELCOME SCREEN
+    ───────────────────────────────────────────── */
+    #screen-welcome .q-title {
+      font-size: clamp(36px, 7vw, 72px);
+      margin-bottom: 20px;
+    }
+    #screen-welcome .q-subtitle {
+      font-size: 17px;
+      max-width: 440px;
+      margin-bottom: 12px;
+    }
+    .welcome-time {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .welcome-time svg { opacity: 0.5; }
+
+    /* ─────────────────────────────────────────────
+       THANK YOU SCREEN
+    ───────────────────────────────────────────── */
+    #screen-thankyou {
+      text-align: center;
+    }
+    #screen-thankyou .screen-inner {
+      align-items: center;
+    }
+    .success-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1.5px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 32px;
+      animation: ringPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+    }
+    @keyframes ringPop {
+      from { opacity: 0; transform: scale(0.5) rotate(-15deg); }
+      to   { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    .checkmark {
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: drawCheck 0.5s 0.3s ease forwards;
+    }
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+    #screen-thankyou .q-title {
+      font-size: clamp(32px, 5vw, 56px);
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    #screen-thankyou .q-subtitle {
+      text-align: center;
+      max-width: 360px;
+    }
+
+    /* ─────────────────────────────────────────────
+       LOADING OVERLAY
+    ───────────────────────────────────────────── */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    #loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─────────────────────────────────────────────
+       BACKGROUND DECORATION
+    ───────────────────────────────────────────── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.025;
+      background-image:
+        linear-gradient(var(--text) 1px, transparent 1px),
+        linear-gradient(90deg, var(--text) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+    .screen { z-index: 1; }
+    #topbar, #progress-bar { z-index: 100; }
+
+    /* ─────────────────────────────────────────────
+       RESPONSIVE
+    ───────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .traits-grid { gap: 8px; }
+      .trait-pill { padding: 10px 15px; font-size: 13px; }
+      #topbar { padding: 16px 20px; }
+      .screen { padding: 70px 20px 80px; }
+      .btn-wrap { flex-wrap: wrap; }
+      .slider-labels { gap: 10px; }
+      .slider-label { font-size: 14px; }
+    }
+
+    /* ─────────────────────────────────────────────
+       KEYBOARD FOCUS
+    ───────────────────────────────────────────── */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+    .btn-primary:focus-visible,
+    .option-chip:focus-visible,
+    .trait-pill:focus-visible {
+      outline-offset: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Background grid -->
+<div class="bg-grid" aria-hidden="true"></div>
+
+<!-- Progress bar -->
+<div id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Survey progress"></div>
+
+<!-- Top bar -->
+<header id="topbar">
+  <div id="topbar-brand">
+    <div id="topbar-logo" aria-hidden="true"><span>C24</span></div>
+    <span id="topbar-name">Cars24</span>
+  </div>
+  <div id="topbar-meta">
+    <span id="step-counter" aria-live="polite"></span>
+    <button id="theme-toggle" aria-label="Toggle theme" title="Toggle dark/light mode">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" role="status" aria-label="Submitting your response">
+  <div class="spinner"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     WELCOME SCREEN
+═══════════════════════════════════════════════ -->
+<section id="screen-welcome" class="screen active" role="main" aria-label="Welcome">
+  <div class="screen-inner">
+    <p class="q-label">Cars24 · Internal</p>
+    <h1 class="q-title">Design Philosophy<br>Survey</h1>
+    <p class="q-subtitle">Help shape the future design philosophy of Cars24. Your perspective matters.</p>
+    <p class="welcome-time">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      10–15 minutes
+    </p>
+    <div class="btn-wrap">
+      <button class="btn-primary" id="btn-start" aria-label="Start the survey">
+        Start Survey
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     Q1 – Name
+═══════════════════════════════════════════════ -->
+<section id="screen-q1" class="screen" role="main" aria-label="Question 1">
+  <div class="screen-inner">
+    <p class="q-label">Question 1 of 13</p>
+    <h2 class="q-title">What is your name?</h2>
+    <div class="input-wrap">
+      <input type="text" id="input-name" class="text-input" placeholder="Your full name" autocomplete="name" autocorrect="off" spellcheck="false" aria-label="Your name" aria-required="true" />
+    </div>
+    <p class="error-msg" id="err-q1" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q1" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q1">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     Q2 – Team
+═══════════════════════════════════════════════ -->
+<section id="screen-q2" class="screen" role="main" aria-label="Question 2">
+  <div class="screen-inner">
+    <p class="q-label">Question 2 of 13</p>
+    <h2 class="q-title">Which team are you from?</h2>
+    <div class="options-grid" role="group" aria-label="Team selection" id="team-options">
+      <button class="option-chip" data-value="Product Design" role="radio" aria-checked="false">Product Design</button>
+      <button class="option-chip" data-value="Marketing" role="radio" aria-checked="false">Marketing</button>
+      <button class="option-chip" data-value="Product" role="radio" aria-checked="false">Product</button>
+      <button class="option-chip" data-value="Engineering" role="radio" aria-checked="false">Engineering</button>
+      <button class="option-chip" data-value="Other" role="radio" aria-checked="false">Other</button>
+    </div>
+    <p class="error-msg" id="err-q2" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q2" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q2">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     Q3 – Traits
+═══════════════════════════════════════════════ -->
+<section id="screen-q3" class="screen" role="main" aria-label="Question 3">
+  <div class="screen-inner">
+    <p class="q-label">Question 3 of 13</p>
+    <h2 class="q-title">Choose <em style="font-style:normal; color:var(--text-2)">only three</em> words that should define every Cars24 experience.</h2>
+    <p id="trait-counter" class="trait-counter" aria-live="polite">0 of 3 selected</p>
+    <div class="traits-grid" role="group" aria-label="Select three traits" id="traits-grid">
+      <button class="trait-pill" data-value="Helpful" role="checkbox" aria-checked="false">Helpful</button>
+      <button class="trait-pill" data-value="Trustworthy" role="checkbox" aria-checked="false">Trustworthy</button>
+      <button class="trait-pill" data-value="Calm" role="checkbox" aria-checked="false">Calm</button>
+      <button class="trait-pill" data-value="Friendly" role="checkbox" aria-checked="false">Friendly</button>
+      <button class="trait-pill" data-value="Efficient" role="checkbox" aria-checked="false">Efficient</button>
+      <button class="trait-pill" data-value="Human" role="checkbox" aria-checked="false">Human</button>
+      <button class="trait-pill" data-value="Transparent" role="checkbox" aria-checked="false">Transparent</button>
+      <button class="trait-pill" data-value="Fast" role="checkbox" aria-checked="false">Fast</button>
+      <button class="trait-pill" data-value="Premium" role="checkbox" aria-checked="false">Premium</button>
+      <button class="trait-pill" data-value="Modern" role="checkbox" aria-checked="false">Modern</button>
+      <button class="trait-pill" data-value="Delightful" role="checkbox" aria-checked="false">Delightful</button>
+      <button class="trait-pill" data-value="Reliable" role="checkbox" aria-checked="false">Reliable</button>
+      <button class="trait-pill" data-value="Thoughtful" role="checkbox" aria-checked="false">Thoughtful</button>
+      <button class="trait-pill" data-value="Confident" role="checkbox" aria-checked="false">Confident</button>
+      <button class="trait-pill" data-value="Warm" role="checkbox" aria-checked="false">Warm</button>
+    </div>
+    <p class="error-msg" id="err-q3" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q3" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q3">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     Q4–Q8 – Sliders
+═══════════════════════════════════════════════ -->
+<section id="screen-q4" class="screen" role="main" aria-label="Question 4">
+  <div class="screen-inner">
+    <p class="q-label">Question 4 of 13</p>
+    <h2 class="q-title">Where does Cars24 sit on this spectrum?</h2>
+    <p class="q-subtitle">Drag to place your answer. Trust your instinct.</p>
+    <div class="slider-wrap">
+      <div class="slider-labels">
+        <span class="slider-label">Fast</span>
+        <div class="slider-track">
+          <div class="slider-rail"></div>
+          <div class="slider-fill" id="fill-q4" style="width:50%"></div>
+          <input type="range" id="slider-q4" min="0" max="100" value="50" aria-label="Fast to Delightful spectrum" aria-valuetext="50 - middle" />
+        </div>
+        <span class="slider-label right">Delightful</span>
+      </div>
+      <p class="slider-value-badge" id="badge-q4">50 — balanced</p>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q4" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q4">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q5" class="screen" role="main" aria-label="Question 5">
+  <div class="screen-inner">
+    <p class="q-label">Question 5 of 13</p>
+    <h2 class="q-title">Where does Cars24 sit on this spectrum?</h2>
+    <p class="q-subtitle">Drag to place your answer. Trust your instinct.</p>
+    <div class="slider-wrap">
+      <div class="slider-labels">
+        <span class="slider-label">Premium</span>
+        <div class="slider-track">
+          <div class="slider-rail"></div>
+          <div class="slider-fill" id="fill-q5" style="width:50%"></div>
+          <input type="range" id="slider-q5" min="0" max="100" value="50" aria-label="Premium to Friendly spectrum" />
+        </div>
+        <span class="slider-label right">Friendly</span>
+      </div>
+      <p class="slider-value-badge" id="badge-q5">50 — balanced</p>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q5" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q5">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q6" class="screen" role="main" aria-label="Question 6">
+  <div class="screen-inner">
+    <p class="q-label">Question 6 of 13</p>
+    <h2 class="q-title">Where does Cars24 sit on this spectrum?</h2>
+    <p class="q-subtitle">Drag to place your answer. Trust your instinct.</p>
+    <div class="slider-wrap">
+      <div class="slider-labels">
+        <span class="slider-label">Calm</span>
+        <div class="slider-track">
+          <div class="slider-rail"></div>
+          <div class="slider-fill" id="fill-q6" style="width:50%"></div>
+          <input type="range" id="slider-q6" min="0" max="100" value="50" aria-label="Calm to Energetic spectrum" />
+        </div>
+        <span class="slider-label right">Energetic</span>
+      </div>
+      <p class="slider-value-badge" id="badge-q6">50 — balanced</p>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q6" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q6">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q7" class="screen" role="main" aria-label="Question 7">
+  <div class="screen-inner">
+    <p class="q-label">Question 7 of 13</p>
+    <h2 class="q-title">Where does Cars24 sit on this spectrum?</h2>
+    <p class="q-subtitle">Drag to place your answer. Trust your instinct.</p>
+    <div class="slider-wrap">
+      <div class="slider-labels">
+        <span class="slider-label">Minimal</span>
+        <div class="slider-track">
+          <div class="slider-rail"></div>
+          <div class="slider-fill" id="fill-q7" style="width:50%"></div>
+          <input type="range" id="slider-q7" min="0" max="100" value="50" aria-label="Minimal to Expressive spectrum" />
+        </div>
+        <span class="slider-label right">Expressive</span>
+      </div>
+      <p class="slider-value-badge" id="badge-q7">50 — balanced</p>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q7" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q7">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q8" class="screen" role="main" aria-label="Question 8">
+  <div class="screen-inner">
+    <p class="q-label">Question 8 of 13</p>
+    <h2 class="q-title">Where does Cars24 sit on this spectrum?</h2>
+    <p class="q-subtitle">Drag to place your answer. Trust your instinct.</p>
+    <div class="slider-wrap">
+      <div class="slider-labels">
+        <span class="slider-label">Functional</span>
+        <div class="slider-track">
+          <div class="slider-rail"></div>
+          <div class="slider-fill" id="fill-q8" style="width:50%"></div>
+          <input type="range" id="slider-q8" min="0" max="100" value="50" aria-label="Functional to Emotional spectrum" />
+        </div>
+        <span class="slider-label right">Emotional</span>
+      </div>
+      <p class="slider-value-badge" id="badge-q8">50 — balanced</p>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q8" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q8">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+      <span class="enter-hint"><kbd class="key-badge">Enter ↵</kbd></span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     Q9–Q13 – Textareas
+═══════════════════════════════════════════════ -->
+<section id="screen-q9" class="screen" role="main" aria-label="Question 9">
+  <div class="screen-inner">
+    <p class="q-label">Question 9 of 13</p>
+    <h2 class="q-title">Cars24 should always...</h2>
+    <textarea id="textarea-q9" class="large-textarea" placeholder="Write freely..." rows="5" aria-label="Cars24 should always..." aria-required="true"></textarea>
+    <p class="error-msg" id="err-q9" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q9" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q9">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q10" class="screen" role="main" aria-label="Question 10">
+  <div class="screen-inner">
+    <p class="q-label">Question 10 of 13</p>
+    <h2 class="q-title">Cars24 should never...</h2>
+    <textarea id="textarea-q10" class="large-textarea" placeholder="Write freely..." rows="5" aria-label="Cars24 should never..." aria-required="true"></textarea>
+    <p class="error-msg" id="err-q10" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q10" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q10">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q11" class="screen" role="main" aria-label="Question 11">
+  <div class="screen-inner">
+    <p class="q-label">Question 11 of 13</p>
+    <h2 class="q-title">After using Cars24, users should feel...</h2>
+    <textarea id="textarea-q11" class="large-textarea" placeholder="Write freely..." rows="5" aria-label="After using Cars24, users should feel..." aria-required="true"></textarea>
+    <p class="error-msg" id="err-q11" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q11" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q11">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q12" class="screen" role="main" aria-label="Question 12">
+  <div class="screen-inner">
+    <p class="q-label">Question 12 of 13</p>
+    <h2 class="q-title">The biggest thing missing from our current experience is...</h2>
+    <textarea id="textarea-q12" class="large-textarea" placeholder="Write freely..." rows="5" aria-label="The biggest thing missing from our current experience..." aria-required="true"></textarea>
+    <p class="error-msg" id="err-q12" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q12" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="next-q12">
+        Continue
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-q13" class="screen" role="main" aria-label="Question 13">
+  <div class="screen-inner">
+    <p class="q-label">Question 13 of 13</p>
+    <h2 class="q-title">If Cars24 were a person, how would you describe them?</h2>
+    <textarea id="textarea-q13" class="large-textarea" placeholder="Think personality, values, and character..." rows="4" aria-label="If Cars24 were a person, how would you describe them" aria-required="true"></textarea>
+    <p class="error-msg" id="err-q13" role="alert" aria-live="polite"></p>
+    <div class="btn-wrap">
+      <button class="btn-back" id="back-q13" aria-label="Go back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
+      <button class="btn-primary" id="btn-submit">
+        Submit Response
+        <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     THANK YOU SCREEN
+═══════════════════════════════════════════════ -->
+<section id="screen-thankyou" class="screen" role="main" aria-label="Thank you">
+  <div class="screen-inner">
+    <div class="success-ring" aria-hidden="true">
+      <svg width="28" height="28" viewBox="0 0 28 28">
+        <polyline class="checkmark" points="6,14 11,19 22,9"/>
+      </svg>
+    </div>
+    <h2 class="q-title">Thank you!</h2>
+    <p class="q-subtitle">Your response has been recorded. You&apos;re helping shape the future of Cars24 design.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════ -->
+<script>
+  /* ─────────────────────────────────────────────
+     SCREENS & CONSTANTS
+  ───────────────────────────────────────────── */
+  const SCREENS = [
+    'welcome',
+    'q1','q2','q3',
+    'q4','q5','q6','q7','q8',
+    'q9','q10','q11','q12','q13',
+    'thankyou'
+  ];
+  const TOTAL_QUESTIONS = 13;
+
+  /* ─────────────────────────────────────────────
+     DEFAULT STATE
+  ───────────────────────────────────────────── */
+  function defaultState() {
+    return {
+      name: '',
+      team: '',
+      traits: [],
+      fast_delightful: 50,
+      premium_friendly: 50,
+      calm_energetic: 50,
+      minimal_expressive: 50,
+      functional_emotional: 50,
+      always_text: '',
+      never_text: '',
+      feel_text: '',
+      missing_text: '',
+      ideal_experience: '',
+      person_description: '',
+    };
+  }
+
+  /* ─────────────────────────────────────────────
+     STATE
+  ───────────────────────────────────────────── */
+  let state = defaultState();
+  let currentIdx = 0;
+
+  /* ─────────────────────────────────────────────
+     PERSISTENCE
+  ───────────────────────────────────────────── */
+  const STORAGE_KEY = 'c24_survey_draft';
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  }
+
+  function clearState() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+  }
+
+  async function submitToSupabase() {
+    const payload = {
+      respondent_name:                  state.name.trim(),
+      team_selected:                    state.team,
+      traits_selected:                  state.traits.join(', '),
+      slider_fast_to_delightful:        state.fast_delightful,
+      slider_minimal_to_expressive:     state.minimal_expressive,
+      slider_functional_to_emotional:   state.functional_emotional,
+      slider_familiar_to_innovative:    state.premium_friendly,
+      slider_direct_to_nuanced:         state.calm_energetic,
+      response_color_palette:           state.always_text.trim(),      // Q9: always
+      response_design_elements:         state.never_text.trim(),       // Q10: never
+      response_user_experience:         state.feel_text.trim(),        // Q11: feel
+      response_personality:             state.missing_text.trim(),     // Q12: missing
+      response_additional_notes:        '',                            // unused
+      person_description:               state.person_description.trim(), // Q13: person
+    };
+    try {
+      const res = await fetch('/api/survey-submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return { error: body.error || 'Submit failed' };
+      }
+      return { error: null };
+    } catch (e) {
+      return { error: e.message };
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     NAVIGATION
+  ───────────────────────────────────────────── */
+  function getScreenEl(id) {
+    return document.getElementById('screen-' + id);
+  }
+
+  function navigateTo(idx, direction = 'forward') {
+    const current = getScreenEl(SCREENS[currentIdx]);
+    const next    = getScreenEl(SCREENS[idx]);
+
+    if (current) {
+      current.classList.add('exit');
+      setTimeout(() => {
+        current.classList.remove('active', 'exit');
+      }, 300);
+    }
+
+    setTimeout(() => {
+      if (next) {
+        next.classList.add('active');
+        // Auto-focus
+        const focusable = next.querySelector('input, textarea, [data-value]');
+        if (focusable) {
+          setTimeout(() => focusable.focus(), 80);
+        }
+      }
+      currentIdx = idx;
+      updateUI();
+    }, 120);
+  }
+
+  function goNext() {
+    if (currentIdx < SCREENS.length - 1) {
+      navigateTo(currentIdx + 1, 'forward');
+    }
+  }
+
+  function goBack() {
+    if (currentIdx > 0) {
+      navigateTo(currentIdx - 1, 'back');
+    }
+  }
+
+  function updateUI() {
+    const screenId = SCREENS[currentIdx];
+    const isQuestion = screenId.startsWith('q');
+    const qNum = isQuestion ? parseInt(screenId.slice(1)) : 0;
+
+    // Progress bar
+    const progress = currentIdx === 0 ? 0
+      : currentIdx >= SCREENS.length - 1 ? 100
+      : Math.round(((qNum) / TOTAL_QUESTIONS) * 100);
+    const bar = document.getElementById('progress-bar');
+    bar.style.width = progress + '%';
+    bar.setAttribute('aria-valuenow', progress);
+
+    // Top bar
+    const brand   = document.getElementById('topbar-brand');
+    const counter = document.getElementById('step-counter');
+    if (screenId === 'welcome') {
+      brand.classList.remove('visible');
+      counter.classList.remove('visible');
+    } else {
+      brand.classList.add('visible');
+      if (isQuestion) {
+        counter.textContent = qNum + ' / ' + TOTAL_QUESTIONS;
+        counter.classList.add('visible');
+      } else {
+        counter.classList.remove('visible');
+      }
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     VALIDATION
+  ───────────────────────────────────────────── */
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg ? '⚠ ' + msg : '';
+  }
+  function clearError(id) { showError(id, ''); }
+
+  function validateQ1() {
+    const val = document.getElementById('input-name').value.trim();
+    if (!val) { showError('err-q1', 'Please enter your name.'); return false; }
+    state.name = val;
+    clearError('err-q1');
+    return true;
+  }
+  function validateQ2() {
+    if (!state.team) { showError('err-q2', 'Please select your team.'); return false; }
+    clearError('err-q2');
+    return true;
+  }
+  function validateQ3() {
+    if (state.traits.length < 1) { showError('err-q3', 'Please select at least one word.'); return false; }
+    clearError('err-q3');
+    return true;
+  }
+  function validateTextarea(qNum) {
+    const fieldMap = {9:'always_text', 10:'never_text', 11:'feel_text', 12:'missing_text', 13:'person_description'};
+    const key = fieldMap[qNum];
+    const val = document.getElementById('textarea-q' + qNum).value.trim();
+    if (!val) { showError('err-q' + qNum, 'This field is required.'); return false; }
+    state[key] = val;
+    clearError('err-q' + qNum);
+    return true;
+  }
+
+  /* ─────────────────────────────────────────────
+     SLIDER HELPERS
+  ───────────────────────────────────────────── */
+  function sliderLabel(val, left, right) {
+    if (val <= 20) return `${val} — leaning ${left}`;
+    if (val <= 45) return `${val} — slightly ${left}`;
+    if (val <= 55) return `${val} — balanced`;
+    if (val <= 80) return `${val} — slightly ${right}`;
+    return `${val} — leaning ${right}`;
+  }
+
+  function setupSlider(id, stateKey, leftLabel, rightLabel) {
+    const input = document.getElementById('slider-' + id);
+    const fill  = document.getElementById('fill-' + id);
+    const badge = document.getElementById('badge-' + id);
+
+    function updateSlider(val) {
+      fill.style.width = val + '%';
+      badge.textContent = sliderLabel(val, leftLabel, rightLabel);
+      state[stateKey] = parseInt(val);
+      saveState();
+    }
+
+    // Initialize
+    input.value = state[stateKey] || 50;
+    updateSlider(input.value);
+
+    input.addEventListener('input', () => updateSlider(input.value));
+    input.addEventListener('change', () => updateSlider(input.value));
+  }
+
+  /* ─────────────────────────────────────────────
+     RESTORE SAVED STATE
+  ───────────────────────────────────────────── */
+  function restoreState() {
+    // Q1
+    if (state.name) document.getElementById('input-name').value = state.name;
+    // Q2
+    if (state.team) {
+      document.querySelectorAll('#team-options .option-chip').forEach(chip => {
+        if (chip.dataset.value === state.team) {
+          chip.classList.add('selected');
+          chip.setAttribute('aria-checked', 'true');
+        }
+      });
+    }
+    // Q3
+    if (state.traits.length) {
+      document.querySelectorAll('#traits-grid .trait-pill').forEach(pill => {
+        if (state.traits.includes(pill.dataset.value)) {
+          pill.classList.add('selected');
+          pill.setAttribute('aria-checked', 'true');
+        }
+      });
+      updateTraitCounter();
+    }
+    // Textareas
+    const taMap = {9:'always_text', 10:'never_text', 11:'feel_text', 12:'missing_text', 13:'person_description'};
+    Object.entries(taMap).forEach(([q, key]) => {
+      const el = document.getElementById('textarea-q' + q);
+      if (el && state[key]) el.value = state[key];
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     TRAIT COUNTER
+  ───────────────────────────────────────────── */
+  function updateTraitCounter() {
+    const count = state.traits.length;
+    const counter = document.getElementById('trait-counter');
+    counter.textContent = count + ' of 3 selected';
+    counter.classList.toggle('maxed', count === 3);
+    counter.classList.remove('error-state');
+
+    document.querySelectorAll('#traits-grid .trait-pill').forEach(pill => {
+      const selected = state.traits.includes(pill.dataset.value);
+      const maxed = count === 3 && !selected;
+      pill.classList.toggle('selected', selected);
+      pill.classList.toggle('disabled', maxed);
+      pill.setAttribute('aria-checked', selected ? 'true' : 'false');
+      pill.setAttribute('tabindex', maxed ? '-1' : '0');
+    });
+  }
+
+  /* ─────────────────────────────────────────────
+     EVENT WIRING
+  ───────────────────────────────────────────── */
+  function wireEvents() {
+    // Welcome → Q1
+    document.getElementById('btn-start').addEventListener('click', goNext);
+
+    // Q1
+    document.getElementById('next-q1').addEventListener('click', () => {
+      if (validateQ1()) { saveState(); goNext(); }
+    });
+    document.getElementById('back-q1').addEventListener('click', goBack);
+    document.getElementById('input-name').addEventListener('input', e => {
+      state.name = e.target.value.trim();
+      saveState();
+    });
+    document.getElementById('input-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.nativeEvent?.isComposing && e.keyCode !== 229) {
+        if (validateQ1()) { saveState(); goNext(); }
+      }
+    });
+
+    // Q2
+    document.getElementById('next-q2').addEventListener('click', () => {
+      if (validateQ2()) { saveState(); goNext(); }
+    });
+    document.getElementById('back-q2').addEventListener('click', goBack);
+    document.querySelectorAll('#team-options .option-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#team-options .option-chip').forEach(c => {
+          c.classList.remove('selected');
+          c.setAttribute('aria-checked', 'false');
+        });
+        chip.classList.add('selected');
+        chip.setAttribute('aria-checked', 'true');
+        state.team = chip.dataset.value;
+        clearError('err-q2');
+        saveState();
+        setTimeout(() => { if (validateQ2()) goNext(); }, 220);
+      });
+      chip.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); chip.click(); }
+      });
+    });
+
+    // Q3
+    document.getElementById('next-q3').addEventListener('click', () => {
+      if (validateQ3()) { saveState(); goNext(); }
+    });
+    document.getElementById('back-q3').addEventListener('click', goBack);
+    document.querySelectorAll('#traits-grid .trait-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        if (pill.classList.contains('disabled')) return;
+        const val = pill.dataset.value;
+        const idx = state.traits.indexOf(val);
+        if (idx > -1) {
+          state.traits.splice(idx, 1);
+        } else if (state.traits.length < 3) {
+          state.traits.push(val);
+        }
+        clearError('err-q3');
+        updateTraitCounter();
+        saveState();
+      });
+      pill.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pill.click(); }
+      });
+    });
+
+    // Sliders Q4–Q8
+    setupSlider('q4', 'fast_delightful',      'Fast',       'Delightful');
+    setupSlider('q5', 'premium_friendly',     'Premium',    'Friendly');
+    setupSlider('q6', 'calm_energetic',       'Calm',       'Energetic');
+    setupSlider('q7', 'minimal_expressive',   'Minimal',    'Expressive');
+    setupSlider('q8', 'functional_emotional', 'Functional', 'Emotional');
+
+    ['q4','q5','q6','q7','q8'].forEach(q => {
+      document.getElementById('next-' + q).addEventListener('click', () => { saveState(); goNext(); });
+      document.getElementById('back-' + q).addEventListener('click', goBack);
+    });
+
+    // Textareas Q9–Q12 (continue buttons)
+    const taMap = {9:'always_text', 10:'never_text', 11:'feel_text', 12:'missing_text', 13:'person_description'};
+    [9,10,11,12].forEach(q => {
+      const ta = document.getElementById('textarea-q' + q);
+      const nextBtn = document.getElementById('next-q' + q);
+      const backBtn = document.getElementById('back-q' + q);
+      if (ta) ta.addEventListener('input', () => { state[taMap[q]] = ta.value; saveState(); });
+      if (nextBtn) nextBtn.addEventListener('click', () => {
+        if (validateTextarea(q)) { saveState(); goNext(); }
+      });
+      if (backBtn) backBtn.addEventListener('click', goBack);
+    });
+
+    // Q13 textarea input (submit button handled separately)
+    const ta13 = document.getElementById('textarea-q13');
+    if (ta13) ta13.addEventListener('input', () => { state.person_description = ta13.value; saveState(); });
+    const back13 = document.getElementById('back-q13');
+    if (back13) back13.addEventListener('click', goBack);
+
+    // Submit button (on Q13)
+    const submitBtn = document.getElementById('btn-submit');
+    if (submitBtn) submitBtn.addEventListener('click', handleSubmit);
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    });
+
+    // Global Enter key handler for sliders
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter' || e.nativeEvent?.isComposing || e.keyCode === 229) return;
+      const active = document.activeElement;
+      if (active && active.tagName === 'TEXTAREA') return;
+      if (active && active.tagName === 'BUTTON') return;
+      const screenId = SCREENS[currentIdx];
+      if (['q4','q5','q6','q7','q8'].includes(screenId)) {
+        saveState();
+        goNext();
+      }
+    });
+  }
+
+  /* ────────────────────────────��────────────────
+     SUBMIT
+  ───────────────────────────────────────────── */
+  let _submitting = false;
+
+  async function handleSubmit() {
+    if (_submitting) return;
+    if (!validateTextarea(13)) return;
+    saveState();
+
+    _submitting = true;
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const overlay = document.getElementById('loading-overlay');
+    overlay.classList.add('active');
+
+    try {
+      const { error } = await submitToSupabase();
+      if (error) throw error;
+      clearState();
+      overlay.classList.remove('active');
+      navigateTo(SCREENS.indexOf('thankyou'));
+    } catch (err) {
+      console.error('[Survey] Submit error:', err);
+      overlay.classList.remove('active');
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Response <svg class="btn-arrow" viewBox="0 0 18 18" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 9h10.5M9.75 4.5 14.25 9l-4.5 4.5"/></svg>';
+      _submitting = false;
+      showError('err-q13', 'Something went wrong. Please try again.');
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────── */
+  function init() {
+    wireEvents();
+    restoreState();
+    updateUI();
+  }
+
+  // Use window.load to ensure deferred scripts (Supabase CDN) are ready
+  if (document.readyState === 'complete') {
+    init();
+  } else {
+    window.addEventListener('load', init);
+  }
+</script>
+</body>
+</html>
